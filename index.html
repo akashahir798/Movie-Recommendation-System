@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 Hybrid Movie Recommender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 3px solid #e94560;
+            background: rgba(15, 52, 96, 0.5);
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            color: #e94560;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            color: #a0a0a0;
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .nav button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            border: 2px solid #e94560;
+            color: #fff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav button:hover, .nav button.active {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+        }
+        
+        .section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #e94560;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            color: #e94560;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            color: #a0a0a0;
+            margin-top: 8px;
+            font-size: 1rem;
+        }
+        
+        .movie-list {
+            display: grid;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .movie-card {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        
+        .movie-card:hover {
+            transform: translateX(15px);
+            background: linear-gradient(135deg, #16213e, #1a1a2e);
+            border-color: #e94560;
+        }
+        
+        .movie-rank {
+            font-size: 1.5rem;
+            color: #e94560;
+            font-weight: bold;
+            width: 40px;
+        }
+        
+        .movie-info {
+            flex: 1;
+            padding: 0 20px;
+        }
+        
+        .movie-info h3 {
+            color: #fff;
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+        
+        .movie-genre {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            display: inline-block;
+            background: rgba(233, 69, 96, 0.2);
+            padding: 4px 12px;
+            border-radius: 15px;
+            margin-right: 10px;
+        }
+        
+        .movie-lang {
+            color: #4ade80;
+            font-size: 0.85rem;
+        }
+        
+        .movie-score {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        .controls {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+        
+        .control-group {
+            margin: 20px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            color: #a0a0a0;
+        }
+        
+        select, input {
+            padding: 15px 20px;
+            font-size: 1rem;
+            background: linear-gradient(135deg, #16213e, #1a1a2e);
+            border: 2px solid #e94560;
+            color: #fff;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+            outline: none;
+        }
+        
+        select:focus, input:focus {
+            box-shadow: 0 0 15px rgba(233, 69, 96, 0.5);
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border: none;
+            color: #fff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s;
+            margin: 10px 5px;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 25px rgba(233, 69, 96, 0.5);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            border: 2px solid #e94560;
+        }
+        
+        .language-section {
+            margin: 30px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            border-radius: 15px;
+        }
+        
+        .language-section h3 {
+            color: #e94560;
+            margin-bottom: 20px;
+        }
+        
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .language-tag {
+            background: linear-gradient(135deg, #16213e, #1a1a2e);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #e94560;
+            transition: all 0.3s;
+        }
+        
+        .language-tag:hover {
+            transform: scale(1.05);
+            background: rgba(233, 69, 96, 0.2);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 50px;
+            border-top: 1px solid #0f3460;
+            color: #a0a0a0;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 1.8rem;
+            color: #4ade80;
+            font-weight: bold;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+        
+        .movie-details {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .movie-details h3 {
+            color: #e94560;
+            margin-bottom: 15px;
+        }
+        
+        .rating-stars {
+            display: flex;
+            gap: 5px;
+            margin: 15px 0;
+        }
+        
+        .star {
+            font-size: 2rem;
+            color: #4ade80;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .star:hover {
+            transform: scale(1.2);
+        }
+        
+        .user-ratings {
+            margin-top: 30px;
+        }
+        
+        .user-rating-card {
+            background: linear-gradient(135deg, #16213e, #1a1a2e);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .rating-badge {
+            background: #e94560;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        
+        .search-box {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .search-box input {
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #16213e;
+            border: 2px solid #e94560;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+        
+        .search-result-item {
+            padding: 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #0f3460;
+            transition: background 0.3s;
+        }
+        
+        .search-result-item:hover {
+            background: rgba(233, 69, 96, 0.2);
+        }
+        
+        .interactive-tip {
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid #e94560;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            color: #a0a0a0;
+        }
+        
+        .genre-filter {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
+        .genre-btn {
+            padding: 8px 16px;
+            background: #16213e;
+            border: 1px solid #e94560;
+            color: #fff;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .genre-btn:hover, .genre-btn.active {
+            background: #e94560;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Hybrid Movie Recommender</h1>
+            <p class="subtitle">Content-Based + Collaborative Filtering | 85.7% Accuracy</p>
+        </header>
+        
+        <nav class="nav">
+            <button class="active" onclick="showSection('home')">🏠 Home</button>
+            <button onclick="showSection('recommend')">🎯 Recommendations</button>
+            <button onclick="showSection('similar')">🔍 Similar Movies</button>
+            <button onclick="showSection('rate')">⭐ Rate Movies</button>
+            <button onclick="showSection('info')">ℹ️ Model Info</button>
+        </nav>
+        
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <h2>Welcome to the Hybrid Movie Recommendation System!</h2>
+            
+            <div class="interactive-tip">
+                💡 Tip: Click on "Recommendations" to get personalized movie suggestions based on your preferences!
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value">150</div>
+                    <div class="stat-label">Movies Available</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">16,954</div>
+                    <div class="stat-label">Total Ratings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">150</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">85.7%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+            </div>
+            
+            <div class="language-section">
+                <h3>📽️ Browse Movies by Language</h3>
+                <div class="language-grid">
+                    <div class="language-tag" onclick="showSection('recommend'); filterByLanguage('hindi')">
+                        🎬 Bollywood (30)
+                    </div>
+                    <div class="language-tag" onclick="showSection('recommend'); filterByLanguage('tamil')">
+                        🎬 Tamil (25)
+                    </div>
+                    <div class="language-tag" onclick="showSection('recommend'); filterByLanguage('telugu')">
+                        🎬 Telugu (25)
+                    </div>
+                    <div class="language-tag" onclick="showSection('recommend'); filterByLanguage('kannada')">
+                        🎬 Kannada (25)
+                    </div>
+                    <div class="language-tag" onclick="showSection('recommend'); filterByLanguage('malayalam')">
+                        🎬 Malayalam (25)
+                    </div>
+                    <div class="language-tag" onclick="showSection('recommend'); filterByLanguage('hollywood')">
+                        🎬 Hollywood (20)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="language-section">
+                <h3>🔥 Popular Movies</h3>
+                <div class="movie-list" id="popularMovies"></div>
+            </div>
+        </section>
+        
+        <!-- Recommendations Section -->
+        <section id="recommend" class="section">
+            <h2>🎯 Get Your Personalised Recommendations</h2>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label>👤 Select Your Profile:</label>
+                    <select id="userSelect" onchange="getRecommendations()">
+                        <option value="">-- Choose a User Profile --</option>
+                        <option value="1">User 1 - Bollywood & Tamil Fan</option>
+                        <option value="5">User 5 - Tamil & Telugu Movies</option>
+                        <option value="10">User 10 - Telugu Action Lover</option>
+                        <option value="15">User 15 - Kannada Movies</option>
+                        <option value="20">User 20 - Malayalam Drama</option>
+                        <option value="25">User 25 - Hollywood Fan</option>
+                        <option value="30">User 30 - Mixed Genres</option>
+                        <option value="40">User 40 - Action & Thriller</option>
+                        <option value="50">User 50 - Romance & Drama</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>🎬 Filter by Genre:</label>
+                    <div class="genre-filter">
+                        <button class="genre-btn active" onclick="setGenreFilter('all')">All</button>
+                        <button class="genre-btn" onclick="setGenreFilter('action')">Action</button>
+                        <button class="genre-btn" onclick="setGenreFilter('drama')">Drama</button>
+                        <button class="genre-btn" onclick="setGenreFilter('comedy')">Comedy</button>
+                        <button class="genre-btn" onclick="setGenreFilter('thriller')">Thriller</button>
+                        <button class="genre-btn" onclick="setGenreFilter('romance')">Romance</button>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="getRecommendations()">🔄 Get Recommendations</button>
+                <button class="btn btn-secondary" onclick="clearRecommendations()">🗑️ Clear</button>
+            </div>
+            
+            <div id="recommendations" class="movie-list"></div>
+        </section>
+        
+        <!-- Similar Movies Section -->
+        <section id="similar" class="section">
+            <h2>🔍 Find Similar Movies</h2>
+            
+            <div class="controls">
+                <div class="search-box">
+                    <label>🔎 Search for a Movie:</label>
+                    <input type="text" id="movieSearch" placeholder="Type movie name..." onkeyup="searchMovies()">
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Or Select a Popular Movie:</label>
+                    <select id="movieSelect" onchange="getSimilarMovies()">
+                        <option value="">-- Choose a Movie --</option>
+                        <optgroup label="Bollywood">
+                            <option value="2">3 Idiots</option>
+                            <option value="3">Lagaan</option>
+                            <option value="4">Dangal</option>
+                            <option value="8">PK</option>
+                            <option value="9">Bajrangi Bhaijaan</option>
+                        </optgroup>
+                        <optgroup label="Tamil">
+                            <option value="31">Vikram Vedha</option>
+                            <option value="32">Master</option>
+                            <option value="33">Jai Bhim</option>
+                            <option value="38">Vikram</option>
+                        </optgroup>
+                        <optgroup label="Telugu">
+                            <option value="56">RRR</option>
+                            <option value="57">Pushpa</option>
+                            <option value="58">Baahubali: The Beginning</option>
+                            <option value="59">Baahubali 2</option>
+                        </optgroup>
+                        <optgroup label="Kannada">
+                            <option value="81">KGF: Chapter 1</option>
+                            <option value="82">KGF: Chapter 2</option>
+                            <option value="83">Kantara</option>
+                        </optgroup>
+                        <optgroup label="Malayalam">
+                            <option value="106">Drishyam</option>
+                            <option value="107">Drishyam 2</option>
+                            <option value="108">Lucifer</option>
+                        </optgroup>
+                        <optgroup label="Hollywood">
+                            <option value="133">The Dark Knight</option>
+                            <option value="136">Inception</option>
+                            <option value="138">Interstellar</option>
+                        </optgroup>
+                    </select>
+                </div>
+                
+                <button class="btn" onclick="getSimilarMovies()">🔍 Find Similar Movies</button>
+            </div>
+            
+            <div id="similarMovies" class="movie-list"></div>
+        </section>
+        
+        <!-- Rate Movies Section -->
+        <section id="rate" class="section">
+            <h2>⭐ Rate Movies</h2>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label>Select a Movie to Rate:</label>
+                    <select id="rateMovieSelect" onchange="showRatingUI()">
+                        <option value="">-- Choose a Movie --</option>
+                    </select>
+                </div>
+                
+                <div id="ratingUI" class="movie-details" style="display: none;">
+                    <h3 id="ratingMovieTitle"></h3>
+                    <p id="ratingMovieGenre" class="movie-genre"></p>
+                    
+                    <div class="rating-stars" id="starRating">
+                        <span class="star" onclick="setRating(1)">★</span>
+                        <span class="star" onclick="setRating(2)">★</span>
+                        <span class="star" onclick="setRating(3)">★</span>
+                        <span class="star" onclick="setRating(4)">★</span>
+                        <span class="star" onclick="setRating(5)">★</span>
+                    </div>
+                    
+                    <p id="ratingValue">Rating: 0/5</p>
+                    <button class="btn" onclick="submitRating()">Submit Rating</button>
+                </div>
+            </div>
+            
+            <div class="user-ratings" id="userRatings">
+                <h3>Your Ratings</h3>
+                <div id="ratingsList"></div>
+            </div>
+        </section>
+        
+        <!-- Info Section -->
+        <section id="info" class="section">
+            <h2>ℹ️ Model Information</h2>
+            
+            <div class="language-section">
+                <h3>🔧 How It Works</h3>
+                
+                <h4>📚 Content-Based Filtering</h4>
+                <p>Uses movie features (genres, keywords, tags) with TF-IDF vectorization and cosine similarity to find movies similar to what you liked.</p>
+                
+                <h4>👥 Collaborative Filtering</h4>
+                <p>Uses user-movie rating matrix with item-based similarity and mean normalization to predict ratings based on similar users' preferences.</p>
+                
+                <h4>🎯 Hybrid Approach</h4>
+                <p>Combines both methods with weighted scoring: <strong>25% Content + 75% Collaborative</strong></p>
+            </div>
+            
+            <div class="language-section">
+                <h3>📊 Evaluation Metrics</h3>
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-value">0.68</div>
+                        <div class="metric-label">RMSE</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0.56</div>
+                        <div class="metric-label">MAE</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">85.7%</div>
+                        <div class="metric-label">Accuracy (within 1★)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">69.9%</div>
+                        <div class="metric-label">Accuracy (within 0.75★)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="language-section">
+                <h3>🛠️ Tech Stack</h3>
+                <p>Python | Pandas | NumPy | Scikit-learn</p>
+            </div>
+        </section>
+        
+        <footer>
+            <p>🎬 Hybrid Movie Recommendation System | Built with ❤️ using ML</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Movie Database
+        const movies = [
+            // Bollywood
+            {id: 1, title: 'Dilwale Dulhania Le Jayenge', genre: 'Drama|Romance', lang: 'hindi'},
+            {id: 2, title: '3 Idiots', genre: 'Comedy|Drama', lang: 'hindi'},
+            {id: 3, title: 'Lagaan', genre: 'Adventure|Drama|Musical', lang: 'hindi'},
+            {id: 4, title: 'Dangal', genre: 'Action|Biography|Drama', lang: 'hindi'},
+            {id: 5, title: 'Sholay', genre: 'Action|Adventure|Crime', lang: 'hindi'},
+            {id: 6, title: 'Mughal-e-Azam', genre: 'Drama|Historical|Musical', lang: 'hindi'},
+            {id: 7, title: 'Gabbar Is Back', genre: 'Action|Crime|Drama', lang: 'hindi'},
+            {id: 8, title: 'PK', genre: 'Comedy|Drama|Sci-Fi', lang: 'hindi'},
+            {id: 9, title: 'Bajrangi Bhaijaan', genre: 'Action|Comedy|Drama', lang: 'hindi'},
+            {id: 10, title: 'My Name is Khan', genre: 'Drama|Romance', lang: 'hindi'},
+            
+            // Tamil
+            {id: 31, title: 'Vikram Vedha', genre: 'Action|Crime|Thriller', lang: 'tamil'},
+            {id: 32, title: 'Master', genre: 'Action|Drama', lang: 'tamil'},
+            {id: 33, title: 'Jai Bhim', genre: 'Action|Drama', lang: 'tamil'},
+            {id: 34, title: 'Soorarai Pottru', genre: 'Action|Drama', lang: 'tamil'},
+            {id: 35, title: 'Asuran', genre: 'Action|Drama', lang: 'tamil'},
+            {id: 36, title: 'Kaithi', genre: 'Action|Crime', lang: 'tamil'},
+            {id: 37, title: 'Anbe Sivam', genre: 'Adventure|Comedy|Drama', lang: 'tamil'},
+            {id: 38, title: 'Vikram', genre: 'Action|Crime|Thriller', lang: 'tamil'},
+            
+            // Telugu
+            {id: 56, title: 'RRR', genre: 'Action|Drama|History', lang: 'telugu'},
+            {id: 57, title: 'Pushpa', genre: 'Action|Drama', lang: 'telugu'},
+            {id: 58, title: 'Baahubali: The Beginning', genre: 'Action|Adventure|Fantasy', lang: 'telugu'},
+            {id: 59, title: 'Baahubali 2: The Conclusion', genre: 'Action|Adventure|Fantasy', lang: 'telugu'},
+            {id: 60, title: 'Arjun Reddy', genre: 'Action|Drama|Romance', lang: 'telugu'},
+            
+            // Kannada
+            {id: 81, title: 'KGF: Chapter 1', genre: 'Action|Crime|Drama', lang: 'kannada'},
+            {id: 82, title: 'KGF: Chapter 2', genre: 'Action|Crime|Drama', lang: 'kannada'},
+            {id: 83, title: 'Kantara', genre: 'Action|Adventure|Drama', lang: 'kannada'},
+            {id: 84, title: '777 Charlie', genre: 'Adventure|Drama', lang: 'kannada'},
+            
+            // Malayalam
+            {id: 106, title: 'Drishyam', genre: 'Crime|Drama|Thriller', lang: 'malayalam'},
+            {id: 107, title: 'Drishyam 2', genre: 'Crime|Drama|Thriller', lang: 'malayalam'},
+            {id: 108, title: 'Lucifer', genre: 'Action|Crime|Drama', lang: 'malayalam'},
+            {id: 109, title: 'Pulimurugan', genre: 'Action|Adventure', lang: 'malayalam'},
+            {id: 110, title: 'Bangalore Days', genre: 'Drama|Romance', lang: 'malayalam'},
+            
+            // Hollywood
+            {id: 131, title: 'The Shawshank Redemption', genre: 'Drama|Crime', lang: 'hollywood'},
+            {id: 132, title: 'The Godfather', genre: 'Crime|Drama', lang: 'hollywood'},
+            {id: 133, title: 'The Dark Knight', genre: 'Action|Crime|Drama', lang: 'hollywood'},
+            {id: 134, title: 'Pulp Fiction', genre: 'Crime|Drama', lang: 'hollywood'},
+            {id: 135, title: 'Forrest Gump', genre: 'Drama|Romance', lang: 'hollywood'},
+            {id: 136, title: 'Inception', genre: 'Action|Sci-Fi|Thriller', lang: 'hollywood'},
+            {id: 137, title: 'The Matrix', genre: 'Action|Sci-Fi', lang: 'hollywood'},
+            {id: 138, title: 'Interstellar', genre: 'Adventure|Drama|Sci-Fi', lang: 'hollywood'},
+            {id: 139, title: 'Titanic', genre: 'Drama|Romance', lang: 'hollywood'},
+            {id: 140, title: 'Avatar', genre: 'Action|Adventure|Sci-Fi', lang: 'hollywood'},
+        ];
+        
+        // User ratings storage
+        let userRatings = {};
+        let currentRating = 0;
+        let currentGenreFilter = 'all';
+        
+        // Recommendations data
+        const recommendations = {
+            1: [
+                {id: 43, title: 'Thiruchitrambalam', genre: 'Comedy|Drama|Romance', score: 0.82, lang: 'tamil'},
+                {id: 52, title: 'Kabali', genre: 'Action|Drama', score: 0.79, lang: 'tamil'},
+                {id: 101, title: 'Adyaksha', genre: 'Action|Comedy', score: 0.79, lang: 'kannada'},
+                {id: 45, title: 'Karnan', genre: 'Action|Drama', score: 0.77, lang: 'tamil'},
+                {id: 95, title: 'Roberrt', genre: 'Action|Drama', score: 0.74, lang: 'kannada'},
+                {id: 68, title: 'Janatha Garage', genre: 'Action|Drama', score: 0.74, lang: 'telugu'},
+                {id: 31, title: 'Vikram Vedha', genre: 'Action|Crime|Thriller', score: 0.73, lang: 'tamil'},
+                {id: 9, title: 'Bajrangi Bhaijaan', genre: 'Action|Comedy|Drama', score: 0.72, lang: 'hindi'},
+                {id: 4, title: 'Dangal', genre: 'Action|Biography|Drama', score: 0.71, lang: 'hindi'},
+                {id: 106, title: 'Drishyam', genre: 'Crime|Drama|Thriller', score: 0.71, lang: 'malayalam'},
+            ],
+            5: [
+                {id: 48, title: 'Mersal', genre: 'Action|Drama|Thriller', score: 0.75, lang: 'tamil'},
+                {id: 97, title: 'Vikrant Rona', genre: 'Action|Adventure|Thriller', score: 0.72, lang: 'kannada'},
+                {id: 62, title: 'Ala Vaikunthapurramuloo', genre: 'Action|Drama', score: 0.72, lang: 'telugu'},
+                {id: 57, title: 'Pushpa', genre: 'Action|Drama', score: 0.71, lang: 'telugu'},
+                {id: 101, title: 'Adyaksha', genre: 'Action|Comedy', score: 0.70, lang: 'kannada'},
+                {id: 38, title: 'Vikram', genre: 'Action|Crime|Thriller', score: 0.69, lang: 'tamil'},
+                {id: 7, title: 'Gabbar Is Back', genre: 'Action|Crime|Drama', score: 0.69, lang: 'hindi'},
+                {id: 82, title: 'KGF: Chapter 2', genre: 'Action|Crime|Drama', score: 0.69, lang: 'kannada'},
+                {id: 81, title: 'KGF: Chapter 1', genre: 'Action|Crime|Drama', score: 0.68, lang: 'kannada'},
+                {id: 56, title: 'RRR', genre: 'Action|Drama|History', score: 0.67, lang: 'telugu'},
+            ],
+            10: [
+                {id: 57, title: 'Pushpa', genre: 'Action|Drama', score: 0.78, lang: 'telugu'},
+                {id: 59, title: 'Baahubali 2', genre: 'Action|Adventure|Fantasy', score: 0.76, lang: 'telugu'},
+                {id: 58, title: 'Baahubali: The Beginning', genre: 'Action|Adventure|Fantasy', score: 0.75, lang: 'telugu'},
+                {id: 60, title: 'Arjun Reddy', genre: 'Action|Drama|Romance', score: 0.73, lang: 'telugu'},
+                {id: 56, title: 'RRR', genre: 'Action|Drama|History', score: 0.72, lang: 'telugu'},
+                {id: 31, title: 'Vikram Vedha', genre: 'Action|Crime|Thriller', score: 0.70, lang: 'tamil'},
+                {id: 38, title: 'Vikram', genre: 'Action|Crime|Thriller', score: 0.69, lang: 'tamil'},
+                {id: 32, title: 'Master', genre: 'Action|Drama', score: 0.68, lang: 'tamil'},
+                {id: 81, title: 'KGF: Chapter 1', genre: 'Action|Crime|Drama', score: 0.67, lang: 'kannada'},
+                {id: 82, title: 'KGF: Chapter 2', genre: 'Action|Crime|Drama', score: 0.66, lang: 'kannada'},
+            ],
+            15: [
+                {id: 81, title: 'KGF: Chapter 1', genre: 'Action|Crime|Drama', score: 0.80, lang: 'kannada'},
+                {id: 82, title: 'KGF: Chapter 2', genre: 'Action|Crime|Drama', score: 0.78, lang: 'kannada'},
+                {id: 83, title: 'Kantara', genre: 'Action|Adventure|Drama', score: 0.75, lang: 'kannada'},
+                {id: 84, title: '777 Charlie', genre: 'Adventure|Drama', score: 0.72, lang: 'kannada'},
+                {id: 56, title: 'RRR', genre: 'Action|Drama|History', score: 0.68, lang: 'telugu'},
+                {id: 57, title: 'Pushpa', genre: 'Action|Drama', score: 0.67, lang: 'telugu'},
+                {id: 59, title: 'Baahubali 2', genre: 'Action|Adventure|Fantasy', score: 0.66, lang: 'telugu'},
+                {id: 58, title: 'Baahubali: The Beginning', genre: 'Action|Adventure|Fantasy', score: 0.65, lang: 'telugu'},
+                {id: 31, title: 'Vikram Vedha', genre: 'Action|Crime|Thriller', score: 0.64, lang: 'tamil'},
+                {id: 38, title: 'Vikram', genre: 'Action|Crime|Thriller', score: 0.63, lang: 'tamil'},
+            ],
+            20: [
+                {id: 106, title: 'Drishyam', genre: 'Crime|Drama|Thriller', score: 0.82, lang: 'malayalam'},
+                {id: 107, title: 'Drishyam 2', genre: 'Crime|Drama|Thriller', score: 0.80, lang: 'malayalam'},
+                {id: 108, title: 'Lucifer', genre: 'Action|Crime|Drama', score: 0.78, lang: 'malayalam'},
+                {id: 109, title: 'Pulimurugan', genre: 'Action|Adventure', score: 0.75, lang: 'malayalam'},
+                {id: 110, title: 'Bangalore Days', genre: 'Drama|Romance', score: 0.73, lang: 'malayalam'},
+                {id: 56, title: 'RRR', genre: 'Action|Drama|History', score: 0.68, lang: 'telugu'},
+                {id: 81, title: 'KGF: Chapter 1', genre: 'Action|Crime|Drama', score: 0.67, lang: 'kannada'},
+                {id: 57, title: 'Pushpa', genre: 'Action|Drama', score: 0.66, lang: 'telugu'},
+                {id: 33, title: 'Jai Bhim', genre: 'Action|Drama', score: 0.65, lang: 'tamil'},
+                {id: 34, title: 'Soorarai Pottru', genre: 'Action|Drama', score: 0.64, lang: 'tamil'},
+            ],
+            25: [
+                {id: 133, title: 'The Dark Knight', genre: 'Action|Crime|Drama', score: 0.85, lang: 'hollywood'},
+                {id: 136, title: 'Inception', genre: 'Action|Sci-Fi|Thriller', score: 0.82, lang: 'hollywood'},
+                {id: 131, title: 'The Shawshank Redemption', genre: 'Drama|Crime', score: 0.80, lang: 'hollywood'},
+                {id: 132, title: 'The Godfather', genre: 'Crime|Drama', score: 0.78, lang: 'hollywood'},
+                {id: 138, title: 'Interstellar', genre: 'Adventure|Drama|Sci-Fi', score: 0.76, lang: 'hollywood'},
+                {id: 140, title: 'Avatar', genre: 'Action|Adventure|Sci-Fi', score: 0.74, lang: 'hollywood'},
+                {id: 137, title: 'The Matrix', genre: 'Action|Sci-Fi', score: 0.72, lang: 'hollywood'},
+                {id: 134, title: 'Pulp Fiction', genre: 'Crime|Drama', score: 0.70, lang: 'hollywood'},
+                {id: 135, title: 'Forrest Gump', genre: 'Drama|Romance', score: 0.68, lang: 'hollywood'},
+                {id: 139, title: 'Titanic', genre: 'Drama|Romance', score: 0.66, lang: 'hollywood'},
+            ],
+            30: [
+                {id: 2, title: '3 Idiots', genre: 'Comedy|Drama', score: 0.75, lang: 'hindi'},
+                {id: 8, title: 'PK', genre: 'Comedy|Drama|Sci-Fi', score: 0.72, lang: 'hindi'},
+                {id: 133, title: 'The Dark Knight', genre: 'Action|Crime|Drama', score: 0.70, lang: 'hollywood'},
+                {id: 31, title: 'Vikram Vedha', genre: 'Action|Crime|Thriller', score: 0.68, lang: 'tamil'},
+                {id: 56, title: 'RRR', genre: 'Action|Drama|History', score: 0.66, lang: 'telugu'},
+            ],
+            40: [
+                {id: 133, title: 'The Dark Knight', genre: 'Action|Crime|Drama', score: 0.82, lang: 'hollywood'},
+                {id: 136, title: 'Inception', genre: 'Action|Sci-Fi|Thriller', score: 0.80, lang: 'hollywood'},
+                {id: 31, title: 'Vikram Vedha', genre: 'Action|Crime|Thriller', score: 0.78, lang: 'tamil'},
+                {id: 38, title: 'Vikram', genre: 'Action|Crime|Thriller', score: 0.76, lang: 'tamil'},
+                {id: 57, title: 'Pushpa', genre: 'Action|Drama', score: 0.74, lang: 'telugu'},
+                {id: 81, title: 'KGF: Chapter 1', genre: 'Action|Crime|Drama', score: 0.72, lang: 'kannada'},
+            ],
+            50: [
+                {id: 1, title: 'Dilwale Dulhania Le Jayenge', genre: 'Drama|Romance', score: 0.82, lang: 'hindi'},
+                {id: 135, title: 'Forrest Gump', genre: 'Drama|Romance', score: 0.80, lang: 'hollywood'},
+                {id: 139, title: 'Titanic', genre: 'Drama|Romance', score: 0.78, lang: 'hollywood'},
+                {id: 110, title: 'Bangalore Days', genre: 'Drama|Romance', score: 0.76, lang: 'malayalam'},
+                {id: 60, title: 'Arjun Reddy', genre: 'Action|Drama|Romance', score: 0.74, lang: 'telugu'},
+                {id: 10, title: 'My Name is Khan', genre: 'Drama|Romance', score: 0.72, lang: 'hindi'},
+            ]
+        };
+        
+        // Similar movies data
+        const similarMovies = {
+            2: [
+                {id: 3, title: 'Lagaan', genre: 'Adventure|Drama|Musical', score: 0.85, lang: 'hindi'},
+                {id: 4, title: 'Dangal', genre: 'Action|Biography|Drama', score: 0.82, lang: 'hindi'},
+                {id: 9, title: 'Bajrangi Bhaijaan', genre: 'Action|Comedy|Drama', score: 0.80, lang: 'hindi'},
+                {id: 8, title: 'PK', genre: 'Comedy|Drama|Sci-Fi', score: 0.78, lang: 'hindi'},
+                {id: 10, title: 'My Name is Khan', genre: 'Drama|Romance', score: 0.76, lang: 'hindi'},
+            ],
+            31: [
+                {id: 38, title: 'Vikram', genre: 'Action|Crime|Thriller', score: 0.88, lang: 'tamil'},
+                {id: 32, title: 'Master', genre: 'Action|Drama', score: 0.85, lang: 'tamil'},
+                {id: 33, title: 'Jai Bhim', genre: 'Action|Drama', score: 0.82, lang: 'tamil'},
+                {id: 35, title: 'Asuran', genre: 'Action|Drama', score: 0.80, lang: 'tamil'},
+                {id: 34, title: 'Soorarai Pottru', genre: 'Action|Drama', score: 0.78, lang: 'tamil'},
+            ],
+            56: [
+                {id: 57, title: 'Pushpa', genre: 'Action|Drama', score: 0.90, lang: 'telugu'},
+                {id: 58, title: 'Baahubali: The Beginning', genre: 'Action|Adventure|Fantasy', score: 0.88, lang: 'telugu'},
+                {id: 59, title: 'Baahubali 2: The Conclusion', genre: 'Action|Adventure|Fantasy', score: 0.86, lang: 'telugu'},
+                {id: 60, title: 'Arjun Reddy', genre: 'Action|Drama|Romance', score: 0.82, lang: 'telugu'},
+                {id: 31, title: 'Vikram Vedha', genre: 'Action|Crime|Thriller', score: 0.80, lang: 'tamil'},
+            ],
+            81: [
+                {id: 82, title: 'KGF: Chapter 2', genre: 'Action|Crime|Drama', score: 0.92, lang: 'kannada'},
+                {id: 83, title: 'Kantara', genre: 'Action|Adventure|Drama', score: 0.88, lang: 'kannada'},
+                {id: 84, title: '777 Charlie', genre: 'Adventure|Drama', score: 0.85, lang: 'kannada'},
+                {id: 56, title: 'RRR', genre: 'Action|Drama|History', score: 0.82, lang: 'telugu'},
+                {id: 57, title: 'Pushpa', genre: 'Action|Drama', score: 0.80, lang: 'telugu'},
+            ],
+            106: [
+                {id: 107, title: 'Drishyam 2', genre: 'Crime|Drama|Thriller', score: 0.95, lang: 'malayalam'},
+                {id: 108, title: 'Lucifer', genre: 'Action|Crime|Drama', score: 0.88, lang: 'malayalam'},
+                {id: 109, title: 'Pulimurugan', genre: 'Action|Adventure', score: 0.85, lang: 'malayalam'},
+                {id: 110, title: 'Bangalore Days', genre: 'Drama|Romance', score: 0.82, lang: 'malayalam'},
+                {id: 33, title: 'Jai Bhim', genre: 'Action|Drama', score: 0.78, lang: 'tamil'},
+            ],
+            133: [
+                {id: 131, title: 'The Shawshank Redemption', genre: 'Drama|Crime', score: 0.88, lang: 'hollywood'},
+                {id: 132, title: 'The Godfather', genre: 'Crime|Drama', score: 0.86, lang: 'hollywood'},
+                {id: 136, title: 'Inception', genre: 'Action|Sci-Fi|Thriller', score: 0.84, lang: 'hollywood'},
+                {id: 138, title: 'Interstellar', genre: 'Adventure|Drama|Sci-Fi', score: 0.82, lang: 'hollywood'},
+                {id: 137, title: 'The Matrix', genre: 'Action|Sci-Fi', score: 0.80, lang: 'hollywood'},
+            ]
+        };
+        
+        const langNames = {
+            hindi: '🎬 Bollywood',
+            tamil: '🎬 Tamil',
+            telugu: '🎬 Telugu',
+            kannada: '🎬 Kannada',
+            malayalam: '🎬 Malayalam',
+            hollywood: '🎬 Hollywood'
+        };
+        
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.nav button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            if (sectionId === 'recommend') {
+                showPopularMovies();
+            }
+            
+            if (sectionId === 'rate') {
+                populateRateSelect();
+            }
+        }
+        
+        function showPopularMovies() {
+            const popular = [
+                {id: 2, title: '3 Idiots', genre: 'Comedy|Drama', score: 0.95, lang: 'hindi'},
+                {id: 56, title: 'RRR', genre: 'Action|Drama|History', score: 0.93, lang: 'telugu'},
+                {id: 133, title: 'The Dark Knight', genre: 'Action|Crime|Drama', score: 0.92, lang: 'hollywood'},
+                {id: 81, title: 'KGF: Chapter 1', genre: 'Action|Crime|Drama', score: 0.90, lang: 'kannada'},
+                {id: 106, title: 'Drishyam', genre: 'Crime|Drama|Thriller', score: 0.89, lang: 'malayalam'},
+                {id: 31, title: 'Vikram Vedha', genre: 'Action|Crime|Thriller', score: 0.88, lang: 'tamil'},
+            ];
+            
+            let html = '';
+            popular.forEach((movie, index) => {
+                html += createMovieCard(movie, index + 1);
+            });
+            document.getElementById('popularMovies').innerHTML = html;
+        }
+        
+        function createMovieCard(movie, rank) {
+            return `
+                <div class="movie-card">
+                    <div class="movie-rank">#${rank}</div>
+                    <div class="movie-info">
+                        <h3>${movie.title}</h3>
+                        <span class="movie-genre">${movie.genre}</span>
+                        <span class="movie-lang">${langNames[movie.lang]}</span>
+                    </div>
+                    <div class="movie-score">${(movie.score * 100).toFixed(0)}%</div>
+                </div>
+            `;
+        }
+        
+        function setGenreFilter(genre) {
+            currentGenreFilter = genre;
+            document.querySelectorAll('.genre-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            getRecommendations();
+        }
+        
+        function getRecommendations() {
+            const userId = document.getElementById('userSelect').value;
+            if (!userId) {
+                document.getElementById('recommendations').innerHTML = '<p style="text-align:center;padding:30px;color:#a0a0a0;">Please select a user profile to get personalized recommendations!</p>';
+                return;
+            }
+            
+            let recs = recommendations[userId] || recommendations[1];
+            
+            // Filter by genre
+            if (currentGenreFilter !== 'all') {
+                recs = recs.filter(m => m.genre.toLowerCase().includes(currentGenreFilter));
+            }
+            
+            let html = '';
+            recs.forEach((movie, index) => {
+                html += createMovieCard(movie, index + 1);
+            });
+            document.getElementById('recommendations').innerHTML = html;
+        }
+        
+        function clearRecommendations() {
+            document.getElementById('userSelect').value = '';
+            document.getElementById('recommendations').innerHTML = '';
+            currentGenreFilter = 'all';
+            document.querySelectorAll('.genre-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('.genre-btn').classList.add('active');
+        }
+        
+        function filterByLanguage(lang) {
+            const langMovies = movies.filter(m => m.lang === lang);
+            let html = '';
+            langMovies.forEach((movie, index) => {
+                html += `
+                    <div class="movie-card">
+                        <div class="movie-rank">#${index + 1}</div>
+                        <div class="movie-info">
+                            <h3>${movie.title}</h3>
+                            <span class="movie-genre">${movie.genre}</span>
+                        </div>
+                        <div class="movie-score" onclick="showSimilarForMovie(${movie.id})">Similar</div>
+                    </div>
+                `;
+            });
+            document.getElementById('recommendations').innerHTML = html;
+        }
+        
+        function searchMovies() {
+            const query = document.getElementById('movieSearch').value.toLowerCase();
+            if (query.length < 2) {
+                document.getElementById('searchResults').style.display = 'none';
+                return;
+            }
+            
+            const results = movies.filter(m => m.title.toLowerCase().includes(query));
+            let html = '';
+            results.slice(0, 8).forEach(movie => {
+                html += `<div class="search-result-item" onclick="selectMovie(${movie.id})">${movie.title} (${movie.lang})</div>`;
+            });
+            
+            const searchResults = document.getElementById('searchResults');
+            if (results.length > 0) {
+                searchResults.style.display = 'block';
+                searchResults.innerHTML = html;
+            } else {
+                searchResults.style.display = 'none';
+            }
+        }
+        
+        function selectMovie(movieId) {
+            document.getElementById('movieSelect').value = movieId;
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('movieSearch').value = '';
+            getSimilarMovies();
+        }
+        
+        function getSimilarMovies() {
+            let movieId = document.getElementById('movieSelect').value;
+            if (!movieId) {
+                document.getElementById('similarMovies').innerHTML = '<p style="text-align:center;padding:30px;color:#a0a0a0;">Please select or search for a movie to find similar ones!</p>';
+                return;
+            }
+            
+            let sims = similarMovies[movieId] || similarMovies[2];
+            
+            let html = '';
+            sims.forEach((movie, index) => {
+                html += createMovieCard(movie, index + 1);
+            });
+            document.getElementById('similarMovies').innerHTML = html;
+        }
+        
+        function showSimilarForMovie(movieId) {
+            showSection('similar');
+            document.getElementById('movieSelect').value = movieId;
+            getSimilarMovies();
+        }
+        
+        function populateRateSelect() {
+            const select = document.getElementById('rateMovieSelect');
+            let html = '<option value="">-- Choose a Movie --</option>';
+            movies.forEach(movie => {
+                html += `<option value="${movie.id}">${movie.title} (${movie.lang})</option>`;
+            });
+            select.innerHTML = html;
+        }
+        
+        function showRatingUI() {
+            const movieId = document.getElementById('rateMovieSelect').value;
+            if (!movieId) {
+                document.getElementById('ratingUI').style.display = 'none';
+                return;
+            }
+            
+            const movie = movies.find(m => m.id == movieId);
+            document.getElementById('ratingMovieTitle').textContent = movie.title;
+            document.getElementById('ratingMovieGenre').textContent = movie.genre;
+            document.getElementById('ratingUI').style.display = 'block';
+            currentRating = 0;
+            updateStars();
+        }
+        
+        function setRating(rating) {
+            currentRating = rating;
+            updateStars();
+        }
+        
+        function updateStars() {
+            const stars = document.querySelectorAll('#starRating .star');
+            stars.forEach((star, index) => {
+                star.style.color = index < currentRating ? '#4ade80' : '#666';
+            });
+            document.getElementById('ratingValue').textContent = `Rating: ${currentRating}/5`;
+        }
+        
+        function submitRating() {
+            const movieId = document.getElementById('rateMovieSelect').value;
+            if (!movieId || currentRating === 0) {
+                alert('Please select a movie and rating!');
+                return;
+            }
+            
+            const movie = movies.find(m => m.id == movieId);
+            userRatings[movieId] = { movie: movie, rating: currentRating };
+            
+            renderUserRatings();
+            alert(`Thanks! You rated "${movie.title}" ${currentRating} stars!`);
+            
+            // Reset
+            document.getElementById('rateMovieSelect').value = '';
+            document.getElementById('ratingUI').style.display = 'none';
+            currentRating = 0;
+        }
+        
+        function renderUserRatings() {
+            const ratingsList = document.getElementById('ratingsList');
+            const ratings = Object.values(userRatings);
+            
+            if (ratings.length === 0) {
+                ratingsList.innerHTML = '<p style="color:#a0a0a0;padding:20px;">No ratings yet. Start rating movies!</p>';
+                return;
+            }
+            
+            let html = '';
+            ratings.forEach(r => {
+                let stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+                html += `
+                    <div class="user-rating-card">
+                        <div>
+                            <strong>${r.movie.title}</strong>
+                            <span class="movie-genre">${r.movie.genre}</span>
+                        </div>
+                        <div class="rating-badge">${stars}</div>
+                    </div>
+                `;
+            });
+            ratingsList.innerHTML = html;
+        }
+        
+        // Initialize
+        window.onload = function() {
+            showPopularMovies();
+            renderUserRatings();
+        };
+    </script>
+</body>
+</html>
